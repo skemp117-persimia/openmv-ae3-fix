@@ -398,13 +398,15 @@ int alif_csi_snapshot(omv_csi_t *csi, image_t *dst_image, uint32_t flags) {
         if (csi->stats_enabled) {
             uint32_t gb, gr;
             int ret = omv_csi_ioctl(csi, OMV_CSI_IOCTL_GET_RGB_STATS, &r, &gb, &gr, &b);
-            if (ret == 0 && r && g && b) {   // only update if stats are non-zero
-                g = (gb + gr) / 2;
-                omv_csi_stats_update(csi, &r, &g, &b, mp_hal_ticks_ms());
+            if (ret != 0) {
+                return ret;
             }
-        }
-        omv_csi_get_stats(csi, &r, &g, &b);
 
+            g = (gb + gr) / 2;
+            omv_csi_stats_update(csi, &r, &g, &b, mp_hal_ticks_ms());
+        }
+
+        omv_csi_get_stats(csi, &r, &g, &b);
 
         // Debayer frame.
         imlib_debayer_image_awb(dst_image, &src_image, false, r, g, b);
